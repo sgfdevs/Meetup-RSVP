@@ -1,0 +1,96 @@
+﻿@page "/"
+@using Meetup.NetStandard.Response
+@using SGFDevsMeetup.Components
+@using Microsoft.AspNetCore.Components
+@using SGFDevsMeetup.Data
+
+@inject MeetupService meetupService;
+@inject IJSRuntime JsRuntime;
+
+<style>
+    img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    h1 {
+        margin: 1em 0;
+    }
+    
+    .member_list {
+        margin: 2em 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    
+    canvas {
+        width: 100%;
+        top: 0;
+        position: fixed;
+    }
+</style>
+
+@if (meetuplist != null)
+{
+    <button @onclick="ChooseWinner">Choose Winner</button>
+}
+
+@if (winner != null)
+{
+    <h1>And the winner is!</h1>
+    <h2>@winner.Name</h2>
+                    
+    <MemberPhoto Member="winner"></MemberPhoto>
+    
+    <div style="margin-bottom: 10em;"></div>
+}
+
+@if (meetuplist == null)
+{
+    <em>Loading Meetup Data... BRB</em>
+}
+else
+{
+    <h1>Unique Total: @meetuplist.Rsvps.Count</h1>
+    
+    foreach (var meetup in meetuplist.Events.OrderByDescending(m => m.RSVPYesCount))
+    {
+        <h2>@meetup.Name (@meetup.RSVPYesCount)</h2>
+    }
+    
+    <ul class="member_list">
+        @foreach (var rsvp in meetuplist.Rsvps)
+        {
+            <li>
+                <MemberPhoto Member="rsvp.Member"></MemberPhoto>
+                <h3>@rsvp.Member.Name</h3>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    DevsMeetupList meetuplist;
+    MeetupMember winner;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        meetuplist = await meetupService.GetMeetings();
+    }
+
+    void ChooseWinner()
+    {
+        Random rand = new Random();
+        int rando = rand.Next(0, meetuplist.Rsvps.Count);
+
+        winner = meetuplist.Rsvps.Skip(rando).First().Member;
+
+        Console.WriteLine("And the winner is " + winner.Name);
+
+        JsRuntime.InvokeVoidAsync("startTheConfetti");
+    }
+}
