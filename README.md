@@ -21,4 +21,5 @@ This tool is hosted on Netlify which runs the compiled assets in the `dist` dire
 `dotnet publish -c release -o dist`
 
 NOTE: Still trying to find a better way to deal with this... If you already have a `dist` folder as a result of publishing. Run this so there isn't any dist-ception.
+
 `rm -rf dist && dotnet publish -c release -o dist`
