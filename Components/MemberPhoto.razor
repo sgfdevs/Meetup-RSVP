@@ -1,0 +1,19 @@
+@using Meetup.NetStandard.Response
+@using Microsoft.AspNetCore.Components
+
+@if (Member.Photo != null && Member.Photo.HighRes != null)
+{
+    <img src="@Member.Photo.HighRes" alt="@Member.Name" />
+}
+else
+{
+    <img src="https://via.placeholder.com/150" alt="@Member.Name" />
+}
+
+
+@code
+{
+    [Parameter]
+    public MeetupMember Member { get; set; }
+
+}
