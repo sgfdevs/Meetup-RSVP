@@ -6,7 +6,7 @@ namespace SGFDevsMeetup.Data
 {
     public class DevsMeetupList
     {
-        public List<Event> Events { get; set; }
+        public List<DevsEvent> Events { get; set; }
         public List<Rsvp> Rsvps { get; set; }
         public List<Rsvp> FullRsvps { get; set; }
     }
