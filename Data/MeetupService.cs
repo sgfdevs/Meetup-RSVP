@@ -15,6 +15,13 @@ using Newtonsoft.Json;
 
 namespace SGFDevsMeetup.Data
 {
+
+    public class DevsEvent : Event
+    {
+        [JsonProperty("rsvp_close_offset")]
+        public string RsvpCloseOffset { get; set; }
+    }
+    
     public class MeetupService
     {
         private readonly HttpClient http;
@@ -26,13 +33,21 @@ namespace SGFDevsMeetup.Data
         public async Task<DevsMeetupList> GetMeetings()
         {
             var today = DateTime.Now;
+
             var timeZoneOffset = new TimeSpan(6,0,0);
             
             string[] sgfDevGroups = {"sgfdevs", "sgfdotnet", "sgf-aws"};
+            var daysOfTheWeekPostMeetup = new[] {DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday};
             var corsProxy = "https://cors-anywhere.herokuapp.com/";
-            var eventList = new List<Event>();
+            var eventList = new List<DevsEvent>();
             var rsvpList = new List<Rsvp>();
             var fullRsvpList = new List<Rsvp>();
+            var monthToCheck = today.Month;
+            
+            if (today.Day > 7 || daysOfTheWeekPostMeetup.Contains(today.DayOfWeek))
+            {
+                monthToCheck = today.Month + 1;
+            }
 
             foreach (var devGroup in sgfDevGroups)
             {
@@ -44,25 +59,17 @@ namespace SGFDevsMeetup.Data
                 
                 var response = await http.SendAsync(requestMessage);
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var meetingList = JsonConvert.DeserializeObject<List<Event>>(responseContent).Select(m =>
+                var meetingList = JsonConvert.DeserializeObject<List<DevsEvent>>(responseContent).Select(m =>
                 {
                     m.Time = m.Time - timeZoneOffset;
                     return m;
                 }).ToList();
-                
-                eventList.AddRange(meetingList.Where(meeting => 
-                    meeting.Time.DayOfWeek == DayOfWeek.Wednesday 
-                    && meeting.Time.Month == today.Month
-                    && meeting.Time.Day <= 7));
 
-                if (eventList.Count != 0) continue;
-                {
-                    var nextMonth = today.Month + 1;
-                    eventList.AddRange(meetingList.Where(meeting => 
-                        meeting.Time.DayOfWeek == DayOfWeek.Wednesday
-                        && meeting.Time.Month == nextMonth
-                        && meeting.Time.Day <= 7));
-                }
+                eventList.AddRange(meetingList.Where(meeting => 
+                    meeting.RsvpCloseOffset == null
+                    && meeting.Time.DayOfWeek == DayOfWeek.Wednesday 
+                    && meeting.Time.Month == monthToCheck
+                    && meeting.Time.Day <= 7));
             }
 
             foreach (var meeting in eventList)
